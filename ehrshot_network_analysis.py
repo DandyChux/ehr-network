@@ -67,6 +67,56 @@ comparison_graph = build_comparison_graph(
 # Shared node list: one row per node across all cohorts.
 all_node_ids = sorted({str(node) for graph in graphs.values() for node in graph.nodes})
 
+# Map graph node IDs to human-readable OMOP concept metadata.
+node_mapping_df = pd.DataFrame({"node_id": all_node_ids})
+node_mapping_df["node_type"] = node_mapping_df["node_id"].map(
+    lambda node_id: "death" if node_id == "NODE_DEATH" else "condition"
+)
+
+concept_columns = [
+    "concept_name",
+    "domain_id",
+    "vocabulary_id",
+    "concept_class_id",
+    "standard_concept",
+    "concept_code",
+]
+for column in concept_columns:
+    node_mapping_df[column] = pd.NA
+
+concept_path = DATA_DIR / "concept.csv"
+
+if concept_path.exists():
+    concept_metadata = pd.read_csv(
+        concept_path,
+        usecols=["concept_id", *concept_columns],
+        dtype={"concept_id": "string"},
+    ).rename(columns={"concept_id": "node_id"})
+
+    concept_metadata["node_id"] = concept_metadata["node_id"].astype(str)
+    concept_metadata = concept_metadata.drop_duplicates("node_id")
+
+    node_mapping_df = node_mapping_df.drop(columns=concept_columns).merge(
+        concept_metadata,
+        on="node_id",
+        how="left",
+    )
+    node_mapping_df["mapping_status"] = "not_found_in_concept.csv"
+    node_mapping_df.loc[node_mapping_df["concept_name"].notna(), "mapping_status"] = (
+        "mapped"
+    )
+else:
+    node_mapping_df["mapping_status"] = "concept_vocabulary_not_provided"
+
+death_mask = node_mapping_df["node_id"].eq("NODE_DEATH")
+node_mapping_df.loc[death_mask, "concept_name"] = "Death"
+node_mapping_df.loc[death_mask, "mapping_status"] = "special_node"
+
+node_mapping_df.to_csv(
+    OUTPUT_DIR / "node_mapping.csv",
+    index=False,
+)
+
 pd.DataFrame({"node_id": all_node_ids}).to_csv(
     OUTPUT_DIR / "nodes.csv",
     index=False,
