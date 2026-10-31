@@ -135,6 +135,7 @@ The main script writes the following files to `outputs/`:
 - `demographic_comparison.graphml` — cohort comparison graph, including cohort-specific edge attributes
 - `demographic_comparison_network.png` — visualization of the comparison graph
 - `top_diagnosis_jaccard_overlap.csv` — pairwise overlap among top diagnoses
+- `node_mapping.csv` — mapping of node IDs to human-readable OMOP concept metadata
 
 Outputs are regenerated from the input data when the analysis script is run.
 

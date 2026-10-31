@@ -16,6 +16,7 @@ from graph import build_comparison_graph, build_graph
 from network_metrics import (
     calculate_metrics,
     calculate_top_diagnosis_overlap,
+    permutation_modularity_test,
 )
 from plot_network import plot_comparison_network, plot_network
 
@@ -247,22 +248,22 @@ overlap_df.to_csv(
 
 print(overlap_df)
 # %%
-#
-# modularity_test = permutation_modularity_test(
-#     cohort_events=cohorts,
-#     graph_builder=lambda events: build_graph(
-#         events,
-#         min_pmi=0.4,
-#     ),
-#     cohort_a="black_female",
-#     cohort_b="non_hispanic_white_female",
-#     permutations=500,
-#     seed=42,
-# )
-#
-# pd.DataFrame([modularity_test]).to_csv(
-#     OUTPUT_DIR / "modularity_permutation_test.csv",
-#     index=False,
-# )
-#
-# modularity_test
+
+modularity_test = permutation_modularity_test(
+    cohort_events=cohorts,
+    graph_builder=lambda events: build_graph(
+        events,
+        min_pmi=0.4,
+    ),
+    cohort_a="black_female",
+    cohort_b="non_hispanic_white_female",
+    permutations=500,
+    seed=42,
+)
+
+pd.DataFrame([modularity_test]).to_csv(
+    OUTPUT_DIR / "modularity_permutation_test.csv",
+    index=False,
+)
+
+print(modularity_test)
